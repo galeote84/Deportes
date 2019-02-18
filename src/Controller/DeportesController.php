@@ -1,5 +1,6 @@
 <?php 
 namespace App\Controller;
+use App\Entity\Noticia;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\Request;
@@ -27,6 +28,55 @@ class DeportesController extends Controller{
         ));
     }
 
+    /*Cargar en la base de datos*/
+    /**
+     * @Route("/deportes/cargarbd", name="noticia")
+     */
+    public function cargarBd(){
+        $em=$this->getDoctrine()->getManager();
+        
+        $noticia=new Noticia();
+        $noticia->setSeccion("Tenis");
+        $noticia->setEquipo("general");
+        $noticia->setFecha("16022018");
+        
+        $noticia->setTextoTitular("torneo-benefico-caja-mágica");
+        $noticia->setTextoNoticia("La próxima semana podremos disfrutar de un torneo benéfico en la caja mágica de Madrid dónde podremos disfrutar de grandes tenistas femeninos y másculinos de todo el mundo");
+        $noticia->setImagen('torneo.jpg');
+        
+        $em->persist($noticia);
+        $em->flush();
+        return new Response("Noticia guardada con éxito con id:".$noticia->getId());
+    }
+    
+    /**
+     * @Route("/deportes/actualizar", name="actualizarNoticia")
+     */
+    public function actualizarBd(Request $request){
+        $em=$this->getDoctrine()->getManager();
+        $id=$request->query->get('id');
+        $noticia=$em->getRepository(Noticia::class)->find($id);
+        
+        $noticia->setTextoTitular("Rafa-Nadal-a-punto-de-perder-el-numero-1");
+        $noticia->setTextoNoticia("El español no depende de él mismo para mantener el número uno, Roger Federer se encuentra a una sola victoria de arrebatarle al mallorquín el título...");
+        $noticia->setImagen('nadal.jpg');
+        
+        $em->flush();
+      
+        return new Response("Noticia actualizada!");
+    }
+    
+    /**
+     * @Route("/deportes/eliminar", name="eliminarNotica")
+     */
+    public function eliminarBd(Request $request){
+        $em=$this->getDoctrine()->getManager();
+        $id=$request->query->get('id');
+        $noticia=$em->getRepository(Noticia::class)->find($id);
+        $em->remove($noticia);
+        $em->flush();
+        return new Response("Noticia eliminada!");
+    }
     /**
      * @Route("/deportes")
      */
@@ -41,17 +91,18 @@ class DeportesController extends Controller{
      *        defaults={"seccion":"tenis"})
      */
     public function lista($seccion, $pagina=1){
-        // Simulamos una base de datos de deportes
-        $sports=["futbol", "tenis","rugby"];
+        $em=$this->getDoctrine()->getManager();
+        $repository=$this->getDoctrine()->getRepository(Noticia::class);
+        //Buscamos las noticias de una sección
+        $noticiaSec=$repository->findOneBy(['seccion'=>$seccion]);
         // Si el deporte que buscamos no se encuentra lanzamos la
         // excepcion 404 deporte no encontrado
-        if(!in_array($seccion,$sports)) {
+        if(!$noticiaSec) {
             throw $this->createNotFoundException('Error 404 este deporte no está en nuestra Base de Datos');
         }
-        
-        return new Response(sprintf(
-                'Deportes sección: sección %s, listado de noticias página %s',
-                $seccion, $pagina));
+        //Almacenamos todas las noticias de una seccion en una lista
+        $noticias=$repository->findBy(["seccion"=>$seccion]);
+        return new Response("Hay un total de ".count($noticias)." noticias de la sección de ".$seccion);
     }
     /**
      * @Route("/deportes/{seccion}/{slug}",
