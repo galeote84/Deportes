@@ -1,0 +1,46 @@
+security:
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
+    providers:
+        #in_memory: { memory: ~ }
+        in_memory:
+            memory:
+                users:
+                    carlos:
+                        #php bin/console security:encode-password pass
+                        password: pass
+                        roles: 'ROLE_USER'
+                    admin:
+                        #php bin/console security:encode-password word
+                        password: word
+                        roles: ['ROLE_ADMIN']
+    encoders:
+        #php bin/console security:encode-password pass
+        Symfony\Component\Security\Core\User\User: plaintext
+        #Symfony\Component\Security\Core\User\User:
+            #algorithm: bcrypt
+            #cost: 12
+        #AppBundle\Entity\Usuario:
+            #algorithm: bcrypt
+            #cost: 12
+        #AppBundle\Entity\Usuario: plaintext
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+        main:
+            anonymous: true
+
+            # activate different ways to authenticate
+
+            http_basic: true
+            # https://symfony.com/doc/current/security.html#a-configuring-how-your-users-will-authenticate
+
+            # form_login: true
+            # https://symfony.com/doc/current/security/form_login_setup.html
+
+    # Easy way to control access for large sections of your site
+    # Note: Only the *first* access control that matches will be used
+    access_control:
+        - { path: ^/user, roles: ROLE_USER }
+        # - { path: ^/admin, roles: ROLE_ADMIN }
+        # - { path: ^/profile, roles: ROLE_USER }
